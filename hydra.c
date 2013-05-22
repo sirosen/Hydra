@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <errno.h>
-#include<time.h>
+#include <time.h>
 #include <sys/prctl.h>
 
 void sigchld_handler(int sig);
@@ -26,23 +26,28 @@ void gen_random(char *s, const int len) {
 
     s[len] = 0;
 }
+
 pid_t new_head() {
     pid_t pid;
     char name[8];
     gen_random(name, 7);
     if((pid = fork()) == 0) {
-        //Set process name and ps aux name (these will be different)
+        //New process group
+        setpgid(0, 0);
+        //Set process name and ps aux name to a
+        //randomly generated string
         prctl(PR_SET_NAME, name);
         strcpy(argv[0], name);
     }
     return pid;
 }
+
 int main(int argc, char **argv1) {
     argv = argv1;
     srand (time(NULL));
     signal(SIGCHLD, sigchld_handler);
     pid_t pid;
-    
+    //Start the hydra with one head
     new_head();
     
     while (1) {
@@ -61,17 +66,20 @@ void sigchld_handler(int sig)
         //Check if they were stopped by a signal
         if (WIFSTOPPED(child_status)) {
             printf("Somebody tried to restrain my head %d\n", pid);
+            //KEEP GOING!!!!
             kill(pid, SIGCONT);
         }
         //Check if they were killed by a signal
         if (WIFSIGNALED(child_status)) {
             printf("Somebody chopped off my head!!!! %d\n", pid);
-            //Fork only the parent twice
+            //Create two new heads (only from the parent)
+            //If we want we could spaw new heads from each of the children
             if (new_head() != 0) {
                 new_head();
             }  
         }
-        //Check if they exited cleanly and send off to grave
+        //Check if they exited cleanly 
+        //(idk why this would happen, maybe Heracles)
         else if (WIFEXITED(child_status)) {
             printf("My head got sleepy and wandered off....%d\n", pid);
         } 
