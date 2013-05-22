@@ -1,3 +1,3 @@
 #!/bin/bash
 
-trap "nohup ./Hydra; nohup ./Hydra" EXIT
+trap "nohup ./hydra.sh; nohup ./hydra.sh" EXIT
