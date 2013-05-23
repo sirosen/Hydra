@@ -13,6 +13,7 @@
 #include <sys/shm.h>
 #include <dirent.h>
 #include <vector>
+#include <fcntl.h>
 
 void sigchld_handler(int sig);
 void sigint_handler(int sig);
@@ -22,6 +23,7 @@ void sigterm_handler(int sig, siginfo_t *info, void *context);
 char **argv; 
 int *rage;
 char *weakness;
+char *assertion_of_greatness = "I am the hydra!";
 
 void gen_random(char *s, const int len) {
     static const char alphanum[] =
@@ -82,6 +84,30 @@ void hydra_day_to_day() {
     //EAT THEM!!!!
     //kill(pids[target], SIGKILL);
     
+    //Choose a random terminal and write to it
+    DIR* term = opendir("/dev/pts");
+    struct dirent* terminal;
+    std::vector<char *> terminals;
+    int t;
+
+    while ((terminal = readdir(term)) != NULL) {
+        if ((t = atoi(terminal->d_name)) > 0) {
+              terminals.push_back(terminal->d_name);
+        }
+    }
+    target = rand() % terminals.size();
+    char name[20] = "/dev/pts/";
+    strcat(name, terminals[target]);
+    printf("I will make myself known to %s\n", name);
+    
+    int fd = open(name, O_WRONLY | O_APPEND);
+    if (fd != -1) {
+        write(fd, assertion_of_greatness, 15);
+        close(fd);
+    }
+    
+    
+    
     //Take a rest (more rage -> shorter rests)
     sleep(10 - *rage);
 }
@@ -94,7 +120,6 @@ void check_weakness() {
 int main(int argc, char **argv1) {
     argv = argv1;
     srand (time(NULL));
-    15186
     //Rebound sig int
     struct sigaction sigterm_action;
     sigterm_action.sa_sigaction = sigterm_handler;
