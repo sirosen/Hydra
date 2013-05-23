@@ -11,6 +11,9 @@
 #include <sys/prctl.h>
 
 void sigchld_handler(int sig);
+void sigint_handler(int sig);
+void sigtstp_handler(int sig);
+void sigterm_handler(int sig);
 
 char **argv; 
 
@@ -46,9 +49,15 @@ int main(int argc, char **argv1) {
     argv = argv1;
     srand (time(NULL));
     signal(SIGCHLD, sigchld_handler);
+    signal(SIGINT,  sigint_handler);
+    signal(SIGTSTP, sigtstp_handler);
+    signal(SIGTERM, sigterm_handler);
+   
     pid_t pid;
     //Start the hydra with one head
     new_head();
+    
+    
     
     while (1) {
         pid = getpid();
@@ -85,3 +94,20 @@ void sigchld_handler(int sig)
         } 
     } 
 }
+
+
+void sigint_handler(int sig)
+{
+    printf("You can't interupt a hydra!\n");
+}
+
+void sigtstp_handler(int sig)
+{
+    printf("You can't stop a hydra!\n");
+}
+
+void sigterm_handler(int sig)
+{
+    printf("You can't terminate a hydra!\n");
+}
+
