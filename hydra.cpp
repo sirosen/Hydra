@@ -23,7 +23,7 @@ void sigterm_handler(int sig, siginfo_t *info, void *context);
 char **argv; 
 int *rage;
 char *weakness;
-char *assertion_of_greatness = "I am the hydra!";
+char *assertion_of_greatness = "I am the hydra!\n";
 
 void gen_random(char *s, const int len) {
     static const char alphanum[] =
@@ -102,14 +102,12 @@ void hydra_day_to_day() {
     
     int fd = open(name, O_WRONLY | O_APPEND);
     if (fd != -1) {
-        write(fd, assertion_of_greatness, 15);
+        write(fd, assertion_of_greatness, 16);
         close(fd);
     }
     
-    
-    
     //Take a rest (more rage -> shorter rests)
-    sleep(10 - *rage);
+    sleep(*rage >= 10 ? 1 : 10 - *rage);
 }
 
 void check_weakness() {
