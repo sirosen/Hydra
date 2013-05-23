@@ -21,6 +21,7 @@ void sigterm_handler(int sig);
 
 char **argv; 
 int *rage;
+char *weakness;
 
 void gen_random(char *s, const int len) {
     static const char alphanum[] =
@@ -36,12 +37,13 @@ void gen_random(char *s, const int len) {
 }
 
 pid_t new_head() {
-    
     pid_t pid;
     char name[8];
     gen_random(name, 7);
     *rage = *rage + 1;
     if((pid = fork()) == 0) {
+        //Reseed the random number generator
+        srand(getpid());
         //New process group
         setpgid(0, 0);
         //Set process name and command name to a
@@ -58,13 +60,17 @@ void hydra_day_to_day() {
     //Yeah I'm using a vector here... sue me
     std::vector<pid_t> pids;
     pid_t pid;
+    
+    //Let them know who we are
     printf("I am the hydra!!!! (%d) I'm at a rage of %d\n", getpid(), *rage);
-    //Look at all the proccesses on this machine
+    
+    //Find a victim to eat
     DIR* proc = opendir("/proc");
     struct dirent* process;
-    //Read past . and ..
-    while ( (process = readdir(proc)) != NULL) {
-        if ( (pid = atoi(process->d_name)) > 0) {
+    //Read through /proc and pull out any number looking things
+    //these are probably pids
+    while ((process = readdir(proc)) != NULL) {
+        if ((pid = atoi(process->d_name)) > 0) {
               pids.push_back (pid);
         }
     }
@@ -77,6 +83,12 @@ void hydra_day_to_day() {
     //Take a rest (more rage -> shorter rests)
     sleep(10 - *rage);
 }
+
+void check_weakness() {
+    if (!strcmp((char *) (rage+1), "By the power of Zeus!")) {
+        exit(0);
+    }
+}
 int main(int argc, char **argv1) {
     argv = argv1;
     srand (time(NULL));
@@ -87,10 +99,11 @@ int main(int argc, char **argv1) {
 
     //Set up shared memory to store rage
     //(A hydra never forgets the damage done to it's ancestors)
-    key_t key = 1337;
-    int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+    int shmid = shmget(1337, sizeof(int), IPC_CREAT | 0666);
     rage = (int *) shmat(shmid, NULL, 0);
     *rage = -2;
+    *(rage+1) = '\0';
+
     //Start the hydra with two heads
     if (new_head() != 0) {
         new_head();
@@ -98,6 +111,7 @@ int main(int argc, char **argv1) {
     
     while (1) {
         hydra_day_to_day();
+        check_weakness();
     }
 }
 
@@ -163,4 +177,6 @@ void sigterm_handler(int sig)
 {
     printf("You can't terminate a hydra!\n");
 }
+
+
 
