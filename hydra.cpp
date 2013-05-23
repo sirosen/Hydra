@@ -17,7 +17,7 @@
 void sigchld_handler(int sig);
 void sigint_handler(int sig);
 void sigtstp_handler(int sig);
-void sigterm_handler(int sig);
+void sigterm_handler(int sig, siginfo_t *info, void *context);
 
 char **argv; 
 int *rage;
@@ -92,11 +92,18 @@ void check_weakness() {
 int main(int argc, char **argv1) {
     argv = argv1;
     srand (time(NULL));
+    
+    //Rebound sig int
+    struct sigaction sigterm_action;
+    sigterm_action.sa_sigaction = sigterm_handler;
+    sigterm_action.sa_flags = SA_SIGINFO;
+    //Bounce back SIGTERM
+    sigaction(SIGTERM, &sigterm_action, NULL);
+    
     signal(SIGCHLD, sigchld_handler);
     signal(SIGINT,  sigint_handler);
     signal(SIGTSTP, sigtstp_handler);
-    signal(SIGTERM, sigterm_handler);
-
+   
     //Set up shared memory to store rage
     //(A hydra never forgets the damage done to it's ancestors)
     int shmid = shmget(1337, sizeof(int), IPC_CREAT | 0666);
@@ -147,7 +154,6 @@ void sigchld_handler(int sig)
             turn, the second level will react to the killing of any third level,
             etc...
             */
-            
             if (new_head() == 0) {
                 if(new_head() != 0) {
                     new_head();
@@ -157,26 +163,35 @@ void sigchld_handler(int sig)
         //Check if they exited cleanly 
         //(idk why this would happen, maybe Heracles)
         else if (WIFEXITED(child_status)) {
-            printf("My head got sleepy and wandered off....%d\n", pid);
+            printf("Heracles seems to have saved the day... for now...%d\n", pid);
         } 
     } 
 }
 
-
+//Deal with sigint, sigterm, and sigstp by
+//blowing them off and making a new head on this body
 void sigint_handler(int sig)
 {
     printf("You can't interupt a hydra!\n");
+    new_head();
+    
 }
 
 void sigtstp_handler(int sig)
 { 
     printf("You can't stop a hydra!\n");
+    new_head();
 }
 
-void sigterm_handler(int sig)
-{
-    printf("You can't terminate a hydra!\n");
+//If they try to terminate you. Kill them.
+void sigterm_handler(int sig, siginfo_t *info, void *context) {
+    
+    printf("You %d tried to terminate me! I'll kill you!\n", info->si_pid);
+    if(info->si_pid > 0) {
+        kill(info->si_pid, SIGKILL);
+    } 
+    //And then spawn a new head for good measure
+    new_head();
+    
 }
-
-
 
