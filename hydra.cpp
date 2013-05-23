@@ -9,6 +9,10 @@
 #include <errno.h>
 #include <time.h>
 #include <sys/prctl.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
+#include <dirent.h>
+#include <vector>
 
 void sigchld_handler(int sig);
 void sigint_handler(int sig);
@@ -16,6 +20,7 @@ void sigtstp_handler(int sig);
 void sigterm_handler(int sig);
 
 char **argv; 
+int *rage;
 
 void gen_random(char *s, const int len) {
     static const char alphanum[] =
@@ -31,20 +36,47 @@ void gen_random(char *s, const int len) {
 }
 
 pid_t new_head() {
+    
     pid_t pid;
     char name[8];
     gen_random(name, 7);
+    *rage = *rage + 1;
     if((pid = fork()) == 0) {
         //New process group
         setpgid(0, 0);
-        //Set process name and ps aux name to a
-        //randomly generated string
+        //Set process name and command name to a
+        //randomly generated string (prevent killall
+        //or greping ps aux)
         prctl(PR_SET_NAME, name);
         strcpy(argv[0], name);
     }
     return pid;
 }
 
+//A day in the life of a hydra
+void hydra_day_to_day() {
+    //Yeah I'm using a vector here... sue me
+    std::vector<pid_t> pids;
+    pid_t pid;
+    printf("I am the hydra!!!! (%d) I'm at a rage of %d\n", getpid(), *rage);
+    //Look at all the proccesses on this machine
+    DIR* proc = opendir("/proc");
+    struct dirent* process;
+    //Read past . and ..
+    while ( (process = readdir(proc)) != NULL) {
+        if ( (pid = atoi(process->d_name)) > 0) {
+              pids.push_back (pid);
+        }
+    }
+    int target = rand() % pids.size();
+    printf("I will eat %d\n", pids[target]);
+    
+    //EAT THEM!!!!
+    //kill(pids[target], SIGKILL);
+    
+    //Take a rest (more rage -> shorter rests)
+    sleep(10 - *rage);
+}
 int main(int argc, char **argv1) {
     argv = argv1;
     srand (time(NULL));
@@ -52,17 +84,20 @@ int main(int argc, char **argv1) {
     signal(SIGINT,  sigint_handler);
     signal(SIGTSTP, sigtstp_handler);
     signal(SIGTERM, sigterm_handler);
-   
-    pid_t pid;
-    //Start the hydra with one head
-    new_head();
-    
-    
+
+    //Set up shared memory to store rage
+    //(A hydra never forgets the damage done to it's ancestors)
+    key_t key = 1337;
+    int shmid = shmget(key, sizeof(int), IPC_CREAT | 0666);
+    rage = (int *) shmat(shmid, NULL, 0);
+    *rage = -2;
+    //Start the hydra with two heads
+    if (new_head() != 0) {
+        new_head();
+    }
     
     while (1) {
-        pid = getpid();
-        printf("I am the hydra!!!! (%d)\n", pid);
-        sleep(1);
+        hydra_day_to_day();
     }
 }
 
@@ -81,10 +116,28 @@ void sigchld_handler(int sig)
         //Check if they were killed by a signal
         if (WIFSIGNALED(child_status)) {
             printf("Somebody chopped off my head!!!! %d\n", pid);
-            //Create two new heads (only from the parent)
-            //If we want we could spaw new heads from each of the children
-            if (new_head() != 0) {
-                new_head();
+            //Create a new head which will act as a parent to two new
+            //children (see following diagram)
+            /*
+            Original hydra:
+                 2
+            1--<
+                 2
+            After chopping off the lower head and respawining
+            
+                   2
+            1 -- <        3
+                   2 -- < 
+                          3
+            The top level will react to the killing of any second level. In
+            turn, the second level will react to the killing of any third level,
+            etc...
+            */
+            
+            if (new_head() == 0) {
+                if(new_head() != 0) {
+                    new_head();
+                }
             }  
         }
         //Check if they exited cleanly 
@@ -102,7 +155,7 @@ void sigint_handler(int sig)
 }
 
 void sigtstp_handler(int sig)
-{
+{ 
     printf("You can't stop a hydra!\n");
 }
 
