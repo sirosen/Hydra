@@ -21,4 +21,7 @@ list_elem_t *get_tail(list_t *l);
 void remove_from_list(list_elem_t *elem);
 void append_val(list_t *l, void *data);
 
+list_elem_t *get_nth_elem(list_t *l, int index);
+int num_elems(list_t *l);
+
 #endif

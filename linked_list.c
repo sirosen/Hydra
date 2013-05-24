@@ -77,3 +77,26 @@ void append_val(list_t *l, void *data) {
     p->next = elem;
     l->dummy_tail->prev = elem;
 }
+
+int num_elems (list_t *l) {
+    int n = 0;
+    for (list_elem_t *cur = get_head(l);
+         cur && cur != l->dummy_tail;
+         cur = cur->next)
+        n++;
+
+    return n;
+}
+
+list_elem_t *get_nth_elem (list_t *l, int index) {
+    list_elem_t *cur = get_head(l);
+    while (cur && index > 0) {
+        cur = cur->next;
+        index--;
+    }
+
+    if (!cur || cur == l->dummy_tail)
+        return NULL;
+    else
+        return cur;
+}
