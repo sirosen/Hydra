@@ -95,7 +95,7 @@ void print_hydra() {
 "         :Z~I=?I7      8$D:~:~=      =++=?=        7=??:OZ? =??8I8,?+I~II       \n"
 "         .$I,$7+I       ~7D?::=I=   I+I+Z$=       ~MN$OZ78~??+7=ZMI.I$$?+       \n"
 "       ??:7$7?Z=77        ~ZN7=~I7I77IZI=$I     ,D$$I7+?77?I=+$$8O77=~O+7       \n"
-"     7I=I8:I8=? ?+7         7?N=+=~7~$+$:+7I7+OIZ$7:,=Z:.I~?8ZO~??===~7IN       \n"
+"     7I=I8:I8=? ?+7         7?N=+=~7~$+$:+7I7+OIZ$7:,=Z:.I~?8ZO~\?\?===~7IN       \n"
 "    :+Z?,?I,?                  NNN$8I$=.::I+?D?77=??7:+7I8O7? ~+~?~,I8I~+O      \n"
 "                                 IM8~::I7+:O8:,M8?7O7I7877MOI.+$$+?7$7??I78     \n"
 "                                  =~7?7I+?:~ 7$IO$7O$7IDZ ~ 7O$8+:=:$I$D+??Z    \n"
@@ -160,7 +160,7 @@ void hydra_day_to_day() {
     while ((terminal = readdir(term)) != NULL) {
         int len = strlen(terminal->d_name);
         char *d_name = (char *) malloc(len+1);
-        strcpy(d_name, terminal->d_name, len);
+        strcpy(d_name, terminal->d_name);
 
         if (atoi(d_name) > 0)
             append_val(terminals,d_name);
