@@ -138,35 +138,46 @@ void hydra_day_to_day() {
     //these are probably pids
     while ((process = readdir(proc)) != NULL) {
         if ((pid = atoi(process->d_name)) > 0) {
-            pid_t *pid_data = (pid_t *) malloc(sizeof(pid_t));
-            *pid_data = pid;
-
-            append_val(pids, pid_data);
+            append_intval(pids, (int) pid);
         }
     }
     int target_index = rand() % num_elems(pids);
     list_elem_t *target_elem = get_nth_elem(pids, target_index);
     pid = *((pid_t *) target_elem->data);
     printf("I will eat %d\n", pid);
+
+    destroy_list(pids);
    
     //EAT THEM!!!!
-    //kill(pids[target], SIGKILL);
+    //kill(pid, SIGKILL);
     
     //Choose a random terminal and write to it
     DIR* term = opendir("/dev/pts");
     struct dirent* terminal;
-    std::vector<char *> terminals;
+    list_t *terminals = new_list();
     int t;
 
     while ((terminal = readdir(term)) != NULL) {
-        if ((t = atoi(terminal->d_name)) > 0) {
-              terminals.push_back(terminal->d_name);
-        }
+        int len = strlen(terminal->d_name);
+        char *d_name = (char *) malloc(len+1);
+        strcpy(d_name, terminal->d_name, len);
+
+        if (atoi(d_name) > 0)
+            append_val(terminals,d_name);
+        else
+            free(d_name);
+
+        free(terminal);
     }
-    target = rand() % terminals.size();
+    closedir(term);
+
+    target_index = rand() % num_elems(terminals);
+    char *d_name = get_nth_elem(terminals, target_index)->data;
     char name[20] = "/dev/pts/";
-    strcat(name, terminals[target]);
+    strcat(name, d_name);
     printf("I will make myself known to %s\n", name);
+
+    destroy_list(terminals);
     
     int fd = open(name, O_WRONLY | O_APPEND);
     if (fd != -1) {
