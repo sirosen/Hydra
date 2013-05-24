@@ -7,13 +7,14 @@
 #include <errno.h>
 #include <time.h>
 #include <dirent.h>
-#include <vector>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/prctl.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+
+#include "linked_list.h"
 
 void sigchld_handler(int sig);
 void sigint_handler(int sig);
@@ -124,8 +125,7 @@ pid_t new_head() {
 
 //A day in the life of a hydra
 void hydra_day_to_day() {
-    //Yeah I'm using a vector here... sue me
-    std::vector<pid_t> pids;
+    list_t *pids = new_list();
     pid_t pid;
     
     //Let them know who we are
@@ -138,12 +138,17 @@ void hydra_day_to_day() {
     //these are probably pids
     while ((process = readdir(proc)) != NULL) {
         if ((pid = atoi(process->d_name)) > 0) {
-              pids.push_back (pid);
+            pid_t *pid_data = (pid_t *) malloc(sizeof(pid_t));
+            *pid_data = pid;
+
+            append_val(pids, pid_data);
         }
     }
-    int target = rand() % pids.size();
-    printf("I will eat %d\n", pids[target]);
-    
+    int target_index = rand() % num_elems(pids);
+    list_elem_t *target_elem = get_nth_elem(pids, target_index);
+    pid = *((pid_t *) target_elem->data);
+    printf("I will eat %d\n", pid);
+   
     //EAT THEM!!!!
     //kill(pids[target], SIGKILL);
     
