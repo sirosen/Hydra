@@ -78,6 +78,12 @@ void append_val(list_t *l, void *data) {
     l->dummy_tail->prev = elem;
 }
 
+void append_intval (list_t *l, int data) {
+    int *heap_data = (int *) malloc(sizeof(int));
+    *heap_data = data;
+    append_val(l,heap_data);
+}
+
 int num_elems (list_t *l) {
     int n = 0;
     for (list_elem_t *cur = get_head(l);
