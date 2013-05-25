@@ -21,9 +21,13 @@ void sigint_handler(int sig);
 void sigtstp_handler(int sig);
 void sigterm_handler(int sig, siginfo_t *info, void *context);
 
+int NEW_HEAD_RAGE_INCREASE = 1;
+int ROOT = 1;
+
 char **argv; 
 int *rage;
 char *weakness;
+
 
 void gen_random(char *s, const int len) {
     static const char alphanum[] =
@@ -102,12 +106,13 @@ void print_hydra() {
 "                                  =7     ~7=$~+=                  =7+           \n");
 }
 
-pid_t new_head() {
+pid_t new_head(int rage_increase) {
     pid_t pid;
     char name[8];
     gen_random(name, 7);
-    *rage = *rage + 1;
+    *rage = *rage + rage_increase;
     if((pid = fork()) == 0) {
+        ROOT = 0;
         //Reseed the random number generator
         srand(getpid());
         //New process group
@@ -186,7 +191,11 @@ void hydra_day_to_day() {
         write(fd, buf, strlen(buf));
         close(fd);
     }
-    
+    //Regenerate pids and names every round (this will make it harder
+    //to manually enter in all pids)
+    if (!ROOT && new_head(0) > 0) {
+        exit(0);
+    }
     //Take a rest (more rage -> shorter rests)
     sleep(*rage >= 10 ? 1 : 10 - *rage);
 }
@@ -215,15 +224,15 @@ int main(int argc, char **argv1) {
     //(A hydra never forgets the damage done to it's ancestors)
     int shmid = shmget(1337, sizeof(int), IPC_CREAT | 0666);
     rage = (int *) shmat(shmid, NULL, 0);
-    *rage = -2;
+    *rage = 0;
     *(rage+1) = '\0';
     
     //The main hydra will run in the terminal
     //All children will be dameonized
     
     //Start the hydra with two heads
-    if (new_head() != 0) {
-        new_head();
+    if (new_head(0) != 0) {
+        new_head(0);
     }
     
     while (1) {
@@ -264,9 +273,10 @@ void sigchld_handler(int sig)
             turn, the second level will react to the killing of any third level,
             etc...
             */
-            if (new_head() == 0) {
-                if(new_head() != 0) {
-                    new_head();
+            //This should only increase rage by 1
+            if (new_head(NEW_HEAD_RAGE_INCREASE) == 0) {
+                if(new_head(0) != 0) {
+                    new_head(0);
                 }
             }  
         }
@@ -283,14 +293,14 @@ void sigchld_handler(int sig)
 void sigint_handler(int sig)
 {
     printf("You can't interupt a hydra!\n");
-    new_head();
+    new_head(NEW_HEAD_RAGE_INCREASE);
     
 }
 
 void sigtstp_handler(int sig)
 { 
     printf("You can't stop a hydra!\n");
-    new_head();
+    new_head(NEW_HEAD_RAGE_INCREASE);
 }
 
 //If they try to terminate you. Kill them.
@@ -301,7 +311,7 @@ void sigterm_handler(int sig, siginfo_t *info, void *context) {
         kill(info->si_pid, SIGKILL);
     } 
     //And then spawn a new head for good measure
-    new_head();
+    new_head(NEW_HEAD_RAGE_INCREASE);
     
 }
 
