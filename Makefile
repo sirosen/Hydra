@@ -1,10 +1,9 @@
 CC = gcc
-CFLAGS = -g3 -Wall -std=c99 -MMD -MPl -D_SVID_SOURCE
+CFLAGS = -D_POSIX_C_SOURCE -D_SVID_SOURCE --std=c99
 
 all: heracles hydra
 
-hydra: hydra.cpp
-	cpp -trigraphs hydra.cpp -o hydra
+hydra: hydra.c linked_list.c
 
 heracles: heracles.c
 
