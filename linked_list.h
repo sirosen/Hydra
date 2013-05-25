@@ -1,5 +1,5 @@
-#ifndef LINKED_LIST_H
-#define LINKED_LIST_H
+#ifndef HYDRA_LINKED_LIST_H
+#define HYDRA_LINKED_LIST_H
 
 typedef struct list_elem_t list_elem_t;
 struct list_elem_t {
