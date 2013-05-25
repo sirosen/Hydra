@@ -181,8 +181,9 @@ void hydra_day_to_day() {
         int color1 = rand() % 2;
         int color2 = (rand() % 8) + 30;
         int bgcolor = (rand() % 8) + 40;
-        //write(fd, assertion_of_greatness, 23);
-        dprintf(fd, "%c[%d;%d;%dmI am the hydra!\n", 0x1B, color1, color2, bgcolor);
+        char buf[50];
+        sprintf(buf, "%c[%d;%d;%dmI am the hydra!\n", 0x1B, color1, color2, bgcolor);
+        write(fd, buf, strlen(buf));
         close(fd);
     }
     
