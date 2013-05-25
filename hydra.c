@@ -202,7 +202,7 @@ int main(int argc, char **argv1) {
     srand (time(NULL));
     //Rebound sig int
     struct sigaction sigterm_action;
-    sigterm_action.sa_handler = sigterm_handler;
+    sigterm_action.sa_sigaction = sigterm_handler;
     sigterm_action.sa_flags = SA_SIGINFO;
     //Bounce back SIGTERM
     sigaction(SIGTERM, &sigterm_action, NULL);
