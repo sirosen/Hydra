@@ -155,7 +155,6 @@ void hydra_day_to_day() {
     DIR* term = opendir("/dev/pts");
     struct dirent* terminal;
     list_t *terminals = new_list();
-    int t;
 
     while ((terminal = readdir(term)) != NULL) {
         int len = strlen(terminal->d_name);

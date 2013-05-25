@@ -28,14 +28,14 @@ list_t *new_list() {
     return ret;
 }
 
-void destroy_list(list _t *l) {
+void destroy_list(list_t *l) {
     if (!l)
         return;
 
     list_elem_t *cur = get_head(l);
     while (cur != l->dummy_tail) {
-        list_elem_t *next = get_next(cur);
-        remove_from_list(l,cur);
+        list_elem_t *next = cur->next;
+        remove_from_list(cur);
         if (cur->data)
             free(cur->data);
         free(cur);
