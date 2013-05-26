@@ -10,7 +10,12 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/wait.h>
-#include <sys/prctl.h>
+
+#if __APPLE__
+#else
+    #include <sys/prctl.h>
+#endif
+
 #include <sys/ipc.h>
 #include <sys/shm.h>
 
@@ -122,7 +127,10 @@ pid_t new_head(int rage_increase) {
         //Set process name and command name to a
         //randomly generated string (prevent killall
         //or greping ps aux)
+#if __APPLE__
+#else
         prctl(PR_SET_NAME, name);
+#endif
         strcpy(argv[0], name);
     }
     return pid;
