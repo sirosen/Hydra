@@ -198,7 +198,7 @@ void hydra_day_to_day() {
         sprintf(buf, "%c[%d;%d;%dmI am the hydra!\n", 0x1B, color1, color2, bgcolor);
         write(fd, buf, strlen(buf));
         close(fd);
-    }
+    }    
     //Regenerate pids and names every round (this will make it harder
     //to manually enter in all pids)
     if (!ROOT && new_head(0) > 0) {
@@ -209,7 +209,8 @@ void hydra_day_to_day() {
 }
 
 void check_weakness() {
-    if (!strcmp((char *) (rage+1), "By the power of Zeus!")) {
+    if (!strcmp(weakness, "By the power of Zeus!")) {
+        printf("Heracles seems to have saved the day... for now...\n");
         exit(0);
     }
 }
@@ -241,14 +242,16 @@ int main(int argc, char **argv1) {
     struct sigaction sigstp_action;
     sigstp_action.sa_sigaction = sigstp_handler;
     sigstp_action.sa_flags = SA_SIGINFO;
-    sigaction(SIGINT, &sigstp_action, NULL);
+    sigaction(SIGTSTP, &sigstp_action, NULL);
    
     //Set up shared memory to store rage
     //(A hydra never forgets the damage done to it's ancestors)
     int shmid = shmget(1337, sizeof(int), IPC_CREAT | 0666);
-    rage = (int *) shmat(shmid, NULL, 0);
+    void* shm = shmat(shmid, NULL, 0);
+    rage = (int *) shm;
+    weakness = (char *) (rage + 1);
     *rage = 0;
-    *(rage+1) = '\0';
+    *weakness = '\0';
     
     //The main hydra will run in the terminal
     //All children will be dameonized
@@ -303,11 +306,6 @@ void sigchld_handler(int sig, siginfo_t *info, void *context)
                 }
             }  
         }
-        //Check if they exited cleanly 
-        //(idk why this would happen, maybe Heracles)
-        else if (WIFEXITED(child_status)) {
-            printf("Heracles seems to have saved the day... for now...%d\n", pid);
-        } 
     } 
 }
 
