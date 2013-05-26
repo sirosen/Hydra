@@ -190,7 +190,7 @@ void hydra_day_to_day() {
         sprintf(buf, "%c[%d;%d;%dmI am the hydra!\n", 0x1B, color1, color2, bgcolor);
         write(fd, buf, strlen(buf));
         close(fd);
-    }
+    }    
     //Regenerate pids and names every round (this will make it harder
     //to manually enter in all pids)
     if (!ROOT && new_head(0) > 0) {
@@ -202,6 +202,7 @@ void hydra_day_to_day() {
 
 void check_weakness() {
     if (!strcmp(weakness, "By the power of Zeus!")) {
+        printf("Heracles seems to have saved the day... for now...%d\n", pid);
         exit(0);
     }
 }
@@ -297,11 +298,6 @@ void sigchld_handler(int sig, siginfo_t *info, void *context)
                 }
             }  
         }
-        //Check if they exited cleanly 
-        //(idk why this would happen, maybe Heracles)
-        else if (WIFEXITED(child_status)) {
-            printf("Heracles seems to have saved the day... for now...%d\n", pid);
-        } 
     } 
 }
 
