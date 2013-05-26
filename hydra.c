@@ -202,7 +202,7 @@ void hydra_day_to_day() {
 
 void check_weakness() {
     if (!strcmp(weakness, "By the power of Zeus!")) {
-        printf("Heracles seems to have saved the day... for now...%d\n", pid);
+        printf("Heracles seems to have saved the day... for now...\n");
         exit(0);
     }
 }
