@@ -16,9 +16,9 @@
 
 #include "linked_list.h"
 
-void sigchld_handler(int sig);
-void sigint_handler(int sig);
-void sigtstp_handler(int sig);
+void sigchld_handler(int sig, siginfo_t *info, void *context);
+void sigint_handler(int sig, siginfo_t *info, void *context);
+void sigstp_handler(int sig, siginfo_t *info, void *context);
 void sigterm_handler(int sig, siginfo_t *info, void *context);
 
 int NEW_HEAD_RAGE_INCREASE = 1;
@@ -209,6 +209,7 @@ int main(int argc, char **argv1) {
     print_hydra();
     argv = argv1;
     srand (time(NULL));
+
     //Rebound sig int
     struct sigaction sigterm_action;
     sigterm_action.sa_sigaction = sigterm_handler;
@@ -216,9 +217,23 @@ int main(int argc, char **argv1) {
     //Bounce back SIGTERM
     sigaction(SIGTERM, &sigterm_action, NULL);
     
-    signal(SIGCHLD, sigchld_handler);
-    signal(SIGINT,  sigint_handler);
-    signal(SIGTSTP, sigtstp_handler);
+    //respawn children that exit
+    struct sigaction sigchld_action;
+    sigchld_action.sa_sigaction = sigchld_handler;
+    sigchld_action.sa_flags = SA_SIGINFO;
+    sigaction(SIGCHLD, &sigchld_action, NULL);
+ 
+    //ignore interrupts
+    struct sigaction sigint_action;
+    sigint_action.sa_sigaction = sigint_handler;
+    sigint_action.sa_flags = SA_SIGINFO;
+    sigaction(SIGINT, &sigint_action, NULL);
+ 
+    //ignore stops
+    struct sigaction sigstp_action;
+    sigstp_action.sa_sigaction = sigstp_handler;
+    sigstp_action.sa_flags = SA_SIGINFO;
+    sigaction(SIGINT, &sigstp_action, NULL);
    
     //Set up shared memory to store rage
     //(A hydra never forgets the damage done to it's ancestors)
@@ -241,7 +256,7 @@ int main(int argc, char **argv1) {
     }
 }
 
-void sigchld_handler(int sig)
+void sigchld_handler(int sig, siginfo_t *info, void *context)
 {
     //Respawn chopped off or restrained heads
     int child_status; 
@@ -290,14 +305,13 @@ void sigchld_handler(int sig)
 
 //Deal with sigint, sigterm, and sigstp by
 //blowing them off and making a new head on this body
-void sigint_handler(int sig)
+void sigint_handler(int sig, siginfo_t *info, void *context)
 {
     printf("You can't interupt a hydra!\n");
     new_head(NEW_HEAD_RAGE_INCREASE);
-    
 }
 
-void sigtstp_handler(int sig)
+void sigstp_handler(int sig, siginfo_t *info, void *context)
 { 
     printf("You can't stop a hydra!\n");
     new_head(NEW_HEAD_RAGE_INCREASE);
