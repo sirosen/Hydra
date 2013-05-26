@@ -1,5 +1,5 @@
 CC = gcc
-#CFLAGS = -D_XOPEN_SOURCE --std=c99
+CFLAGS = -D_XOPEN_SOURCE=500 --std=c99
 
 all: heracles hydra
 
